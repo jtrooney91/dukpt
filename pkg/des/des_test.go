@@ -111,18 +111,20 @@ func TestDeriveCurrentTransactionKey(t *testing.T) {
 			require.Equal(t, item.DataReqEnc, encReqData)
 
 			decReqData, err := DecryptData(ck, encReqData, nil, pkg.ActionRequest)
+			decReqDataStr := string(decReqData)
 			require.NoError(t, err)
-			require.Len(t, decReqData, 24)
-			require.Equal(t, data, decReqData[:len(data)])
+			require.Len(t, decReqDataStr, 24)
+			require.Equal(t, data, decReqDataStr[:len(data)])
 
 			encResData, err := EncryptData(ck, nil, data, pkg.ActionResponse)
 			require.NoError(t, err)
 			require.Equal(t, item.DataResEnc, encResData)
 
 			decResData, err := DecryptData(ck, encResData, nil, pkg.ActionResponse)
+			decResDataStr := string(decResData)
 			require.NoError(t, err)
-			require.Len(t, decResData, 24)
-			require.Equal(t, data, decResData[:len(data)])
+			require.Len(t, decResDataStr, 24)
+			require.Equal(t, data, decResDataStr[:len(data)])
 
 			encReqMac, err := GenerateMac(ck, data, pkg.ActionRequest)
 			require.NoError(t, err)

@@ -341,7 +341,7 @@ func EncryptData(currentKey, iv []byte, plainText, action string) ([]byte, error
 // Return Params:
 //   - result is transaction request data ( must be a multiple of tdes block length [8])
 //   - err
-func DecryptData(currentKey, ciphertext, iv []byte, action string) (string, error) {
+func DecryptData(currentKey, ciphertext, iv []byte, action string) ([]byte, error) {
 	dataKey := make([]byte, keyLen)
 	copy(dataKey, currentKey)
 
@@ -361,12 +361,12 @@ func DecryptData(currentKey, ciphertext, iv []byte, action string) (string, erro
 	keyCipher, _ := encryption.NewTripleDesECB(dataKey)
 	leftKey, err := keyCipher.Encrypt(dataKey[:desBlockLen])
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
 	rightKey, err := keyCipher.Encrypt(dataKey[desBlockLen:])
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
 	newKey := append(leftKey, rightKey...)
@@ -394,5 +394,5 @@ func DecryptData(currentKey, ciphertext, iv []byte, action string) (string, erro
 	mode := cipher.NewCBCDecrypter(dataCipher.GetBlock(), iv)
 	mode.CryptBlocks(plaintext, serializePlaintext)
 
-	return string(plaintext), nil
+	return plaintext, nil
 }
