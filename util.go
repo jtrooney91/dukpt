@@ -1,4 +1,4 @@
-package pkg
+package dukpt
 
 import (
 	"encoding/binary"

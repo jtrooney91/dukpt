@@ -4,9 +4,9 @@ import (
 	"crypto/aes"
 	"encoding/binary"
 	"errors"
+	"github.com/moov-io/dukpt"
 
 	"github.com/moov-io/dukpt/encryption"
-	"github.com/moov-io/dukpt/pkg"
 )
 
 const (
@@ -248,7 +248,7 @@ func checkWorkingKeyLength(keyLen uint16, keyType string) error {
 }
 
 func generateDerivationKey(params derivationParams) ([]byte, error) {
-	tc := pkg.GetAesTcFromKsn(params.Ksn)
+	tc := dukpt.GetAesTcFromKsn(params.Ksn)
 	derivationData, err := createDerivationData(params.KeyUsage, params.KeyType, params.Ksn, tc)
 	if err != nil {
 		return nil, err
