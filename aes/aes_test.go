@@ -2,7 +2,7 @@ package aes
 
 import (
 	"fmt"
-	"github.com/moov-io/dukpt"
+	"github.com/jtrooney91/dukpt/utils"
 	"strings"
 	"testing"
 
@@ -116,7 +116,7 @@ func TestAES128(t *testing.T) {
 	expectedIK := []byte{0x12, 0x73, 0x67, 0x1E, 0xA2, 0x6A, 0xC2, 0x9A, 0xFA, 0x4D, 0x10, 0x84, 0x12, 0x76, 0x52, 0xA1}
 
 	// Advance to first KSN
-	ksn, err := dukpt.GenerateNextAesKsn(append(initialKeyID, make([]byte, 4)...))
+	ksn, err := utils.GenerateNextAesKsn(append(initialKeyID, make([]byte, 4)...))
 	require.NoError(t, err)
 
 	ik, err := DerivationOfInitialKey(bdk, ksn)
@@ -127,13 +127,13 @@ func TestAES128(t *testing.T) {
 	for index, item := range InitialSequence {
 		t.Run(fmt.Sprintf("Sequence #%d KSN: %s", index+1, item.Ksn), func(t *testing.T) {
 
-			valid := dukpt.IsValidAesKsn(ksn)
+			valid := utils.IsValidAesKsn(ksn)
 			require.Equal(t, true, valid)
-			require.Equal(t, item.Ksn, strings.ToUpper(dukpt.HexEncode(ksn)))
+			require.Equal(t, item.Ksn, strings.ToUpper(utils.HexEncode(ksn)))
 
 			transactionKey, err := DeriveCurrentTransactionKey(ik, ksn)
 			require.NoError(t, err)
-			require.Equal(t, item.CurrentKey, strings.ToUpper(dukpt.HexEncode(transactionKey)))
+			require.Equal(t, item.CurrentKey, strings.ToUpper(utils.HexEncode(transactionKey)))
 
 			encPinblock, err := EncryptPin(transactionKey, ksn, pin, pan, KeyAES128Type)
 			require.NoError(t, err)
@@ -142,42 +142,42 @@ func TestAES128(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, pin, decPinblock)
 
-			genMac, err := GenerateCMAC(transactionKey, ksn, macData, KeyAES128Type, dukpt.ActionRequest)
+			genMac, err := GenerateCMAC(transactionKey, ksn, macData, KeyAES128Type, utils.ActionRequest)
 			require.NoError(t, err)
-			require.Equal(t, item.CMACRequest, strings.ToUpper(dukpt.HexEncode(genMac)))
+			require.Equal(t, item.CMACRequest, strings.ToUpper(utils.HexEncode(genMac)))
 
-			genMac, err = GenerateCMAC(transactionKey, ksn, macData, KeyAES128Type, dukpt.ActionResponse)
+			genMac, err = GenerateCMAC(transactionKey, ksn, macData, KeyAES128Type, utils.ActionResponse)
 			require.NoError(t, err)
-			require.Equal(t, item.CMACResponse, strings.ToUpper(dukpt.HexEncode(genMac)))
+			require.Equal(t, item.CMACResponse, strings.ToUpper(utils.HexEncode(genMac)))
 
-			genMac, err = GenerateHMAC(transactionKey, ksn, macData, KeyHMAC128Type, dukpt.ActionRequest)
+			genMac, err = GenerateHMAC(transactionKey, ksn, macData, KeyHMAC128Type, utils.ActionRequest)
 			require.NoError(t, err)
-			require.Equal(t, item.HMACRequest, strings.ToUpper(dukpt.HexEncode(genMac)))
+			require.Equal(t, item.HMACRequest, strings.ToUpper(utils.HexEncode(genMac)))
 
-			genMac, err = GenerateHMAC(transactionKey, ksn, macData, KeyHMAC128Type, dukpt.ActionResponse)
+			genMac, err = GenerateHMAC(transactionKey, ksn, macData, KeyHMAC128Type, utils.ActionResponse)
 			require.NoError(t, err)
-			require.Equal(t, item.HMACResponse, strings.ToUpper(dukpt.HexEncode(genMac)))
+			require.Equal(t, item.HMACResponse, strings.ToUpper(utils.HexEncode(genMac)))
 
-			encData, err := EncryptData(transactionKey, ksn, nil, macData, KeyAES128Type, dukpt.ActionRequest)
+			encData, err := EncryptData(transactionKey, ksn, nil, macData, KeyAES128Type, utils.ActionRequest)
 			require.NoError(t, err)
-			require.Equal(t, item.DataRequest, strings.ToUpper(dukpt.HexEncode(encData)))
+			require.Equal(t, item.DataRequest, strings.ToUpper(utils.HexEncode(encData)))
 
-			decData, err := DecryptData(transactionKey, ksn, encData, nil, KeyAES128Type, dukpt.ActionRequest)
+			decData, err := DecryptData(transactionKey, ksn, encData, nil, KeyAES128Type, utils.ActionRequest)
 			require.NoError(t, err)
 			require.Len(t, decData, 32)
-			require.Equal(t, macData, decData[:len(macData)])
+			require.Equal(t, macData, string(decData[:len(macData)]))
 
-			encData, err = EncryptData(transactionKey, ksn, nil, macData, KeyAES128Type, dukpt.ActionResponse)
+			encData, err = EncryptData(transactionKey, ksn, nil, macData, KeyAES128Type, utils.ActionResponse)
 			require.NoError(t, err)
-			require.Equal(t, item.DataResponse, strings.ToUpper(dukpt.HexEncode(encData)))
+			require.Equal(t, item.DataResponse, strings.ToUpper(utils.HexEncode(encData)))
 
-			decData, err = DecryptData(transactionKey, ksn, encData, nil, KeyAES128Type, dukpt.ActionResponse)
+			decData, err = DecryptData(transactionKey, ksn, encData, nil, KeyAES128Type, utils.ActionResponse)
 			require.NoError(t, err)
 			require.Len(t, decData, 32)
-			require.Equal(t, macData, decData[:len(macData)])
+			require.Equal(t, macData, string(decData[:len(macData)]))
 
 			// next KSN
-			ksn, err = dukpt.GenerateNextAesKsn(ksn)
+			ksn, err = utils.GenerateNextAesKsn(ksn)
 			require.NoError(t, err)
 		})
 	}

@@ -6,10 +6,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
-	"github.com/moov-io/dukpt"
+	"github.com/jtrooney91/dukpt/utils"
 
 	"github.com/chmike/cmac-go"
-	"github.com/moov-io/dukpt/encryption"
+	"github.com/jtrooney91/dukpt/encryption"
 	"github.com/moov-io/pinblock/formats"
 )
 
@@ -74,7 +74,7 @@ func DeriveCurrentTransactionKey(ik, ksn []byte) ([]byte, error) {
 	transactionKey := make([]byte, len(ik))
 	copy(transactionKey, ik)
 
-	tc := dukpt.GetAesTcFromKsn(ksn)
+	tc := utils.GetAesTcFromKsn(ksn)
 	var workingTc uint32
 	var derivationData *keyDerivationData
 
@@ -140,7 +140,7 @@ func EncryptPin(currentKey, ksn []byte, pin, pan string, keyType string) ([]byte
 		return nil, err
 	}
 
-	return dukpt.HexDecode(blockstr), nil
+	return utils.HexDecode(blockstr), nil
 }
 
 // Decrypt PIN block using DUKPT transaction key
@@ -180,7 +180,7 @@ func DecryptPin(currentKey, ksn, ciphertext []byte, pan string, keyType string) 
 	}
 
 	formatter := formats.NewISO4(cipher)
-	blockstr, err := formatter.Decode(dukpt.HexEncode(ciphertext), pan)
+	blockstr, err := formatter.Decode(utils.HexEncode(ciphertext), pan)
 	if err != nil {
 		return "", err
 	}
@@ -208,8 +208,8 @@ func GenerateCMAC(currentKey, ksn []byte, plaintext string, keyType string, acti
 		return nil, err
 	}
 
-	if action != dukpt.ActionRequest && action != dukpt.ActionResponse {
-		action = dukpt.ActionRequest
+	if action != utils.ActionRequest && action != utils.ActionResponse {
+		action = utils.ActionRequest
 	}
 
 	params := derivationParams{
@@ -218,7 +218,7 @@ func GenerateCMAC(currentKey, ksn []byte, plaintext string, keyType string, acti
 		Ksn:        ksn,
 		CurrentKey: currentKey,
 	}
-	if action == dukpt.ActionResponse {
+	if action == utils.ActionResponse {
 		params.KeyUsage = usageForMessageVerification
 	}
 
@@ -257,8 +257,8 @@ func GenerateHMAC(currentKey, ksn []byte, plaintext string, keyType string, acti
 		return nil, err
 	}
 
-	if action != dukpt.ActionRequest && action != dukpt.ActionResponse {
-		action = dukpt.ActionRequest
+	if action != utils.ActionRequest && action != utils.ActionResponse {
+		action = utils.ActionRequest
 	}
 
 	params := derivationParams{
@@ -267,7 +267,7 @@ func GenerateHMAC(currentKey, ksn []byte, plaintext string, keyType string, acti
 		Ksn:        ksn,
 		CurrentKey: currentKey,
 	}
-	if action == dukpt.ActionResponse {
+	if action == utils.ActionResponse {
 		params.KeyUsage = usageForMessageVerification
 	}
 
@@ -303,8 +303,8 @@ func EncryptData(currentKey, ksn, iv []byte, plaintext, keyType, action string) 
 		return nil, err
 	}
 
-	if action != dukpt.ActionRequest && action != dukpt.ActionResponse {
-		action = dukpt.ActionRequest
+	if action != utils.ActionRequest && action != utils.ActionResponse {
+		action = utils.ActionRequest
 	}
 
 	params := derivationParams{
@@ -313,7 +313,7 @@ func EncryptData(currentKey, ksn, iv []byte, plaintext, keyType, action string) 
 		Ksn:        ksn,
 		CurrentKey: currentKey,
 	}
-	if action == dukpt.ActionResponse {
+	if action == utils.ActionResponse {
 		params.KeyUsage = usageForDataDecrypt
 	}
 
@@ -366,13 +366,13 @@ func EncryptData(currentKey, ksn, iv []byte, plaintext, keyType, action string) 
 // Return Params:
 //   - result is transaction request data ( must be a multiple of aes block length [16])
 //   - err
-func DecryptData(currentKey, ksn, ciphertext, iv []byte, keyType, action string) (string, error) {
+func DecryptData(currentKey, ksn, ciphertext, iv []byte, keyType, action string) ([]byte, error) {
 	if err := checkWorkingKeyLength(uint16(len(currentKey)), keyType); err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
-	if action != dukpt.ActionRequest && action != dukpt.ActionResponse {
-		action = dukpt.ActionRequest
+	if action != utils.ActionRequest && action != utils.ActionResponse {
+		action = utils.ActionRequest
 	}
 
 	params := derivationParams{
@@ -381,13 +381,13 @@ func DecryptData(currentKey, ksn, ciphertext, iv []byte, keyType, action string)
 		Ksn:        ksn,
 		CurrentKey: currentKey,
 	}
-	if action == dukpt.ActionResponse {
+	if action == utils.ActionResponse {
 		params.KeyUsage = usageForDataDecrypt
 	}
 
 	dataKey, err := generateDerivationKey(params)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
 	if iv == nil {
@@ -412,11 +412,11 @@ func DecryptData(currentKey, ksn, ciphertext, iv []byte, keyType, action string)
 
 	block, err := aes.NewCipher(dataKey)
 	if err != nil {
-		return "", fmt.Errorf("making cipher from datakey: %w", err)
+		return []byte{}, fmt.Errorf("making cipher from datakey: %w", err)
 	}
 
 	mode := cipher.NewCBCDecrypter(block, iv)
 	mode.CryptBlocks(plaintext, serializePlaintext)
 
-	return string(plaintext), nil
+	return plaintext, nil
 }

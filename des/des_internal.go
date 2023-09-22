@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/des" //nolint:gosec
 	"fmt"
-	"github.com/moov-io/dukpt/encryption"
+	"github.com/jtrooney91/dukpt/encryption"
 )
 
 const (

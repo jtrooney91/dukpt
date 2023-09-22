@@ -3,6 +3,7 @@ package dukpt
 import (
 	"fmt"
 	"github.com/jtrooney91/dukpt/des"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -13,17 +14,13 @@ func TestDerivationOfInitialKey(t *testing.T) {
 	var ltestCiphertext = []byte{0xb8, 0x8d, 0x22, 0xdb, 0x5e, 0xe0, 0x1f, 0x7b, 0x2b, 0x7d, 0x88, 0xb0, 0xf8, 0xce, 0x4a, 0x28}
 
 	ik, err := des.DerivationOfInitialKey(ltestBdk, ltestKsn)
-	if err != nil {
-		panic(err)
-	}
-	key, err := des.DeriveCurrentTransactionKey(ik, ltestKsn)
-	if err != nil {
-		panic(err)
-	}
-	res, err := des.DecryptData(key, ltestCiphertext, nil, "")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(res)
+	require.NoError(t, err)
 
+	key, err := des.DeriveCurrentTransactionKey(ik, ltestKsn)
+	require.NoError(t, err)
+
+	res, err := des.DecryptData(key, ltestCiphertext, nil, "")
+	require.NoError(t, err)
+
+	require.Equal(t, fmt.Sprintf("%x", res), "5a08374245455400001f000000000000")
 }
